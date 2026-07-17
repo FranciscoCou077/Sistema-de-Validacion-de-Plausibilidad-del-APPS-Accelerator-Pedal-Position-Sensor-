@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>APPS Telemetry — UNAM Motorsport</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#08090B;
+    --panel:#111318;
+    --panel-2:#161920;
+    --line:#22262E;
+    --line-soft:#1A1D24;
+    --text:#EDEFF2;
+    --muted:#6E7580;
+    --muted-2:#454B54;
+    --ok:#19C37D;
+    --ok-dim:#0F5C3D;
+    --warn:#F2A93B;
+    --warn-dim:#7A5518;
+    --fault:#F0304C;
+    --fault-dim:#5C1420;
+    --ch1:#3FD3E8;
+    --ch2:#F2A93B;
+    --mono:'JetBrains Mono', monospace;
+    --disp:'Rajdhani', sans-serif;
+    --body:'Inter', sans-serif;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{height:100%;}
+  body{
+    background:
+      radial-gradient(ellipse 900px 500px at 15% -10%, rgba(63,211,232,0.06), transparent),
+      radial-gradient(ellipse 900px 500px at 100% 0%, rgba(240,48,76,0.05), transparent),
+      var(--bg);
+    color:var(--text);
+    font-family:var(--body);
+    min-height:100%;
+    padding:20px;
+  }
+  .wrap{max-width:1180px; margin:0 auto;}
+
+  /* ---------- HEADER ---------- */
+  header{
+    display:flex; align-items:center; justify-content:space-between;
+    gap:16px; flex-wrap:wrap;
+    padding-bottom:18px; margin-bottom:20px;
+    border-bottom:1px solid var(--line);
+  }
+  .brand{display:flex; align-items:center; gap:12px;}
+  .brand-mark{
+    width:38px; height:38px; border-radius:8px;
+    background:linear-gradient(135deg, var(--ch1), #1a6f7d);
+    display:flex; align-items:center; justify-content:center;
+    font-family:var(--disp); font-weight:700; font-size:16px; color:#04181c;
+    flex-shrink:0;
+  }
+  .brand-text .eyebrow{
+    font-family:var(--mono); font-size:10.5px; letter-spacing:.14em;
+    color:var(--muted); text-transform:uppercase;
+  }
+  .brand-text h1{
+    font-family:var(--disp); font-weight:700; font-size:22px; letter-spacing:.01em;
+    line-height:1.1; margin-top:2px;
+  }
+  .header-controls{display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
+
+  .conn-status{
+    display:flex; align-items:center; gap:8px;
+    font-family:var(--mono); font-size:12px; color:var(--muted);
+    padding:8px 12px; border:1px solid var(--line); border-radius:7px; background:var(--panel);
+  }
+  .dot{width:8px; height:8px; border-radius:50%; background:var(--muted-2); flex-shrink:0;}
+  .dot.live{background:var(--ok); box-shadow:0 0 8px var(--ok);}
+  .dot.err{background:var(--fault); box-shadow:0 0 8px var(--fault);}
+
+  button{
+    font-family:var(--disp); font-weight:600; font-size:14px; letter-spacing:.03em;
+    border-radius:7px; padding:9px 18px; cursor:pointer;
+    border:1px solid var(--line); background:var(--panel-2); color:var(--text);
+    transition:all .15s ease;
+  }
+  button:hover{border-color:#3a414c; background:#1b1f27;}
+  button:active{transform:translateY(1px);}
+  button:disabled{opacity:.4; cursor:not-allowed;}
+  button.primary{
+    background:linear-gradient(135deg, #1c8a92, #146069);
+    border-color:#1c8a92; color:#eafcff;
+  }
+  button.primary:hover{filter:brightness(1.1);}
+  button.danger{
+    background:linear-gradient(135deg, #7a2030, #4d1420);
+    border-color:#7a2030; color:#ffe3e7;
+  }
+
+  .not-supported{
+    display:none; margin:0 0 20px 0; padding:14px 16px;
+    border:1px solid var(--fault-dim); background:rgba(240,48,76,0.07);
+    border-radius:9px; font-size:13px; color:#ffb3bf; line-height:1.5;
+  }
+  .not-supported code{font-family:var(--mono); background:#000; padding:1px 5px; border-radius:4px;}
+
+  /* ---------- STATE BANNER ---------- */
+  .state-banner{
+    display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px;
+    padding:22px 26px; border-radius:12px; margin-bottom:20px;
+    background:var(--panel); border:1px solid var(--line);
+    transition:background .25s ease, border-color .25s ease;
+  }
+  .state-banner.state-ok{border-color:var(--ok-dim); background:linear-gradient(180deg, rgba(25,195,125,0.08), var(--panel) 60%);}
+  .state-banner.state-pend{border-color:var(--warn-dim); background:linear-gradient(180deg, rgba(242,169,59,0.09), var(--panel) 60%);}
+  .state-banner.state-fault{border-color:var(--fault); background:linear-gradient(180deg, rgba(240,48,76,0.14), var(--panel) 60%);}
+
+  .state-left{display:flex; align-items:center; gap:16px;}
+  .led-pair{display:flex; gap:8px;}
+  .led{
+    width:20px; height:20px; border-radius:50%;
+    background:#2a2e35; border:1px solid #3a3f48;
+    transition:all .2s ease;
+  }
+  .led.green-on{background:var(--ok); box-shadow:0 0 16px 3px rgba(25,195,125,0.65); border-color:var(--ok);}
+  .led.red-on{background:var(--fault); box-shadow:0 0 16px 3px rgba(240,48,76,0.7); border-color:var(--fault);}
+
+  .state-label .eyebrow{font-family:var(--mono); font-size:10.5px; color:var(--muted); letter-spacing:.14em; text-transform:uppercase;}
+  .state-label .value{
+    font-family:var(--disp); font-weight:700; font-size:30px; letter-spacing:.01em; line-height:1.15;
+  }
+  .state-ok .value{color:var(--ok);}
+  .state-pend .value{color:var(--warn);}
+  .state-fault .value{color:var(--fault);}
+
+  .debounce-ring-wrap{display:flex; align-items:center; gap:12px;}
+  .debounce-ring-wrap .txt{font-family:var(--mono); font-size:11px; color:var(--muted); text-align:right; line-height:1.5;}
+  .debounce-ring-wrap .txt b{color:var(--text); font-size:13px;}
+
+  /* ---------- CHANNEL GRID ---------- */
+  .channels{display:grid; grid-template-columns:1fr 1fr 1.1fr; gap:16px; margin-bottom:16px;}
+  @media(max-width:860px){.channels{grid-template-columns:1fr;}}
+
+  .card{
+    background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:18px 20px;
+  }
+  .card .eyebrow{font-family:var(--mono); font-size:10.5px; letter-spacing:.13em; color:var(--muted); text-transform:uppercase;}
+
+  .channel-card .top-row{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:14px;}
+  .channel-card .pin-tag{font-family:var(--mono); font-size:11px; color:var(--muted-2); background:#0d0f13; border:1px solid var(--line); padding:2px 7px; border-radius:5px;}
+  .channel-card .big-num{font-family:var(--disp); font-weight:700; font-size:44px; line-height:1;}
+  .channel-card .big-num span{font-size:20px; color:var(--muted); font-weight:600;}
+  .channel-card.ch1 .big-num{color:var(--ch1);}
+  .channel-card.ch2 .big-num{color:var(--ch2);}
+
+  .vbar-outer{
+    height:16px; width:100%; border-radius:5px; background:#0b0d10;
+    border:1px solid var(--line); overflow:hidden; margin-top:14px;
+  }
+  .vbar-fill{height:100%; width:0%; border-radius:5px; transition:width .08s linear;}
+  .channel-card.ch1 .vbar-fill{background:linear-gradient(90deg, #0e5a63, var(--ch1));}
+  .channel-card.ch2 .vbar-fill{background:linear-gradient(90deg, #7a5518, var(--ch2));}
+
+  .card-foot{display:flex; justify-content:space-between; margin-top:10px; font-family:var(--mono); font-size:10.5px; color:var(--muted-2);}
+
+  /* ---------- PLAUSIBILITY BAND (signature element) ---------- */
+  .plaus-card{display:flex; flex-direction:column;}
+  .plaus-head{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:6px;}
+  .plaus-head .big-num{font-family:var(--disp); font-weight:700; font-size:44px; line-height:1; color:var(--text);}
+  .plaus-head .big-num span{font-size:20px; color:var(--muted); font-weight:600;}
+  .plaus-sub{font-family:var(--mono); font-size:10.5px; color:var(--muted-2); margin-bottom:14px;}
+
+  .band-track{
+    position:relative; height:56px; border-radius:8px; background:#0b0d10;
+    border:1px solid var(--line); margin-top:4px; overflow:hidden;
+  }
+  .band-safe-zone{
+    position:absolute; top:0; bottom:0; left:0;
+    background:rgba(25,195,125,0.14);
+    border-right:1px dashed rgba(25,195,125,0.55);
+  }
+  .band-scale{
+    position:absolute; inset:0; display:flex; justify-content:space-between;
+    padding:4px 8px; font-family:var(--mono); font-size:9.5px; color:var(--muted-2);
+    pointer-events:none;
+  }
+  .band-needle{
+    position:absolute; top:0; bottom:0; width:3px;
+    background:var(--text); box-shadow:0 0 10px rgba(255,255,255,0.5);
+    transform:translateX(-50%); transition:left .08s linear, background .15s ease, box-shadow .15s ease;
+    border-radius:2px;
+  }
+  .band-needle.danger{background:var(--fault); box-shadow:0 0 12px rgba(240,48,76,0.85);}
+  .band-labels{display:flex; justify-content:space-between; margin-top:8px; font-family:var(--mono); font-size:10px; color:var(--muted);}
+
+  /* ---------- CHART ---------- */
+  .chart-card{margin-bottom:16px;}
+  .chart-card .top-row{display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:10px;}
+  .legend{display:flex; gap:16px; font-family:var(--mono); font-size:11px; color:var(--muted);}
+  .legend span{display:inline-flex; align-items:center; gap:6px;}
+  .swatch{width:10px; height:10px; border-radius:2px; display:inline-block;}
+  canvas#chart{width:100%; height:220px; display:block;}
+
+  /* ---------- LOG ---------- */
+  .log-card .top-row{display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;}
+  #log{
+    height:180px; overflow-y:auto; background:#0a0b0e; border:1px solid var(--line-soft);
+    border-radius:8px; padding:10px 12px; font-family:var(--mono); font-size:11.5px;
+    line-height:1.65; color:#9aa3ad;
+  }
+  #log .l-ok{color:#4fae82;}
+  #log .l-pend{color:var(--warn);}
+  #log .l-fault{color:var(--fault); font-weight:600;}
+  #log::-webkit-scrollbar{width:8px;}
+  #log::-webkit-scrollbar-thumb{background:#262b33; border-radius:4px;}
+
+  footer{
+    margin-top:22px; padding-top:16px; border-top:1px solid var(--line);
+    font-family:var(--mono); font-size:10.5px; color:var(--muted-2);
+    display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{transition:none !important;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="brand">
+      <div class="brand-mark">λ</div>
+      <div class="brand-text">
+        <div class="eyebrow">UNAM Motorsport · Regla T.4.2</div>
+        <h1>APPS Plausibility Dashboard</h1>
+      </div>
+    </div>
+    <div class="header-controls">
+      <div class="conn-status">
+        <span class="dot" id="connDot"></span>
+        <span id="connText">Sin conexión</span>
+      </div>
+      <button class="primary" id="btnConnect">Conectar ESP32</button>
+      <button class="danger" id="btnDisconnect" disabled>Desconectar</button>
+    </div>
+  </header>
+
+  <div class="not-supported" id="noSupport">
+    Este navegador no soporta <b>Web Serial API</b>. Abre este archivo en <b>Google Chrome</b> o <b>Microsoft Edge</b>
+    de escritorio (no funciona en Firefox, Safari, ni en navegadores móviles). Verifica también que el ESP32 esté
+    conectado por USB y que ningún otro programa —como el Monitor Serie del Arduino IDE— tenga el puerto abierto.
+  </div>
+
+  <section class="state-banner state-ok" id="stateBanner">
+    <div class="state-left">
+      <div class="led-pair">
+        <div class="led" id="ledGreen"></div>
+        <div class="led" id="ledRed"></div>
+      </div>
+      <div class="state-label">
+        <div class="eyebrow">Estado del sistema de seguridad</div>
+        <div class="value" id="stateValue">ESPERANDO DATOS</div>
+      </div>
+    </div>
+    <div class="debounce-ring-wrap">
+      <div class="txt">Debounce (100 ms)<br><b id="debounceTxt">—</b></div>
+    </div>
+  </section>
+
+  <div class="channels">
+    <div class="card channel-card ch1">
+      <div class="top-row">
+        <div>
+          <div class="eyebrow">Canal 1 · Divisor 10k/20k</div>
+        </div>
+        <div class="pin-tag">GPIO35</div>
+      </div>
+      <div class="big-num" id="ch1Val">0.0<span>%</span></div>
+      <div class="vbar-outer"><div class="vbar-fill" id="ch1Bar"></div></div>
+      <div class="card-foot"><span>0%</span><span>100%</span></div>
+    </div>
+
+    <div class="card channel-card ch2">
+      <div class="top-row">
+        <div>
+          <div class="eyebrow">Canal 2 · Divisor 10k/10k</div>
+        </div>
+        <div class="pin-tag">GPIO34</div>
+      </div>
+      <div class="big-num" id="ch2Val">0.0<span>%</span></div>
+      <div class="vbar-outer"><div class="vbar-fill" id="ch2Bar"></div></div>
+      <div class="card-foot"><span>0%</span><span>100%</span></div>
+    </div>
+
+    <div class="card plaus-card">
+      <div class="plaus-head">
+        <div>
+          <div class="eyebrow">Banda de plausibilidad</div>
+        </div>
+        <div class="big-num" id="diffVal">0.0<span>%</span></div>
+      </div>
+      <div class="plaus-sub">Diferencia |Canal 1 − Canal 2| · umbral de falla: 10.0%</div>
+      <div class="band-track">
+        <div class="band-safe-zone" id="safeZone" style="width:33.3%"></div>
+        <div class="band-scale">
+          <span>0</span><span>10</span><span>20</span><span>30</span>
+        </div>
+        <div class="band-needle" id="needle" style="left:0%"></div>
+      </div>
+      <div class="band-labels"><span>PLAUSIBLE</span><span>FALLA DE PLAUSIBILIDAD →</span></div>
+    </div>
+  </div>
+
+  <div class="card chart-card">
+    <div class="top-row">
+      <div class="eyebrow">Telemetría en vivo</div>
+      <div class="legend">
+        <span><i class="swatch" style="background:var(--ch1)"></i>Canal 1</span>
+        <span><i class="swatch" style="background:var(--ch2)"></i>Canal 2</span>
+        <span><i class="swatch" style="background:var(--fault)"></i>Diferencia</span>
+      </div>
+    </div>
+    <canvas id="chart"></canvas>
+  </div>
+
+  <div class="card log-card">
+    <div class="top-row">
+      <div class="eyebrow">Registro CSV crudo (últimas 200 líneas)</div>
+      <button id="btnClearLog" style="padding:5px 12px; font-size:12px;">Limpiar</button>
+    </div>
+    <div id="log">timestamp_ms,ch1_pct,ch2_pct,diferencia_pct,estado — esperando conexión...</div>
+  </div>
+
+  <footer>
+    <span>Sistema de Validación de Plausibilidad APPS — UNAM Motorsport</span>
+    <span>115200 baudios · Web Serial API</span>
+  </footer>
+
+</div>
+
+<script>
+(function(){
+  const UMBRAL = 10.0;
+  const DEBOUNCE_MS = 100;
+
+  const els = {
+    noSupport: document.getElementById('noSupport'),
+    connDot: document.getElementById('connDot'),
+    connText: document.getElementById('connText'),
+    btnConnect: document.getElementById('btnConnect'),
+    btnDisconnect: document.getElementById('btnDisconnect'),
+    stateBanner: document.getElementById('stateBanner'),
+    stateValue: document.getElementById('stateValue'),
+    ledGreen: document.getElementById('ledGreen'),
+    ledRed: document.getElementById('ledRed'),
+    debounceTxt: document.getElementById('debounceTxt'),
+    ch1Val: document.getElementById('ch1Val'),
+    ch2Val: document.getElementById('ch2Val'),
+    ch1Bar: document.getElementById('ch1Bar'),
+    ch2Bar: document.getElementById('ch2Bar'),
+    diffVal: document.getElementById('diffVal'),
+    needle: document.getElementById('needle'),
+    log: document.getElementById('log'),
+    btnClearLog: document.getElementById('btnClearLog'),
+    chart: document.getElementById('chart'),
+  };
+
+  let port, reader, keepReading = false;
+  let lineBuffer = '';
+  const history = []; // {t, p1, p2, diff}
+  const MAX_POINTS = 200;
+  let fallaPendienteDesde = null;
+
+  function supported(){ return 'serial' in navigator; }
+  if(!supported()){
+    els.noSupport.style.display = 'block';
+    els.btnConnect.disabled = true;
+  }
+
+  function setConn(status){
+    els.connDot.className = 'dot' + (status==='live' ? ' live' : status==='err' ? ' err' : '');
+    els.connText.textContent =
+      status==='live' ? 'Conectado — recibiendo datos' :
+      status==='connecting' ? 'Conectando…' :
+      status==='err' ? 'Error de conexión' : 'Sin conexión';
+  }
+
+  function log(line, cls){
+    const div = document.createElement('div');
+    if(cls) div.className = cls;
+    div.textContent = line;
+    if(els.log.firstChild && els.log.firstChild.nodeType === Node.TEXT_NODE) els.log.textContent = '';
+    els.log.appendChild(div);
+    while(els.log.childElementCount > 200) els.log.removeChild(els.log.firstChild);
+    els.log.scrollTop = els.log.scrollHeight;
+  }
+
+  function classifyLine(estado){
+    if(estado === 'OK') return 'l-ok';
+    if(estado === 'PENDIENTE') return 'l-pend';
+    if(estado === 'FALLA_CONFIRMADA') return 'l-fault';
+    return '';
+  }
+
+  function updateUI(t, p1, p2, diff, estado){
+    els.ch1Val.innerHTML = p1.toFixed(1) + '<span>%</span>';
+    els.ch2Val.innerHTML = p2.toFixed(1) + '<span>%</span>';
+    els.ch1Bar.style.width = Math.max(0, Math.min(100, p1)) + '%';
+    els.ch2Bar.style.width = Math.max(0, Math.min(100, p2)) + '%';
+    els.diffVal.innerHTML = diff.toFixed(1) + '<span>%</span>';
+
+    const needlePct = Math.max(0, Math.min(30, diff)) / 30 * 100;
+    els.needle.style.left = needlePct + '%';
+    els.needle.classList.toggle('danger', diff > UMBRAL);
+
+    els.stateBanner.classList.remove('state-ok','state-pend','state-fault');
+    els.ledGreen.classList.remove('green-on');
+    els.ledRed.classList.remove('red-on');
+
+    if(estado === 'OK'){
+      els.stateBanner.classList.add('state-ok');
+      els.stateValue.textContent = 'OK — MOTOR HABILITADO';
+      els.ledGreen.classList.add('green-on');
+      fallaPendienteDesde = null;
+      els.debounceTxt.textContent = 'sin falla activa';
+    } else if(estado === 'PENDIENTE'){
+      els.stateBanner.classList.add('state-pend');
+      els.stateValue.textContent = 'FALLA PENDIENTE';
+      els.ledGreen.classList.add('green-on');
+      if(fallaPendienteDesde === null) fallaPendienteDesde = t;
+      const transcurrido = Math.min(DEBOUNCE_MS, t - fallaPendienteDesde);
+      els.debounceTxt.textContent = transcurrido.toFixed(0) + ' / ' + DEBOUNCE_MS + ' ms';
+    } else if(estado === 'FALLA_CONFIRMADA'){
+      els.stateBanner.classList.add('state-fault');
+      els.stateValue.textContent = 'FALLA CONFIRMADA — MOTOR CORTADO';
+      els.ledRed.classList.add('red-on');
+      els.debounceTxt.textContent = '≥ ' + DEBOUNCE_MS + ' ms sostenidos';
+    } else {
+      els.stateValue.textContent = 'ESPERANDO DATOS';
+    }
+
+    history.push({t, p1, p2, diff});
+    while(history.length > MAX_POINTS) history.shift();
+    drawChart();
+  }
+
+  function handleLine(line){
+    line = line.trim();
+    if(!line) return;
+    const parts = line.split(',');
+    if(parts.length !== 5) { log(line); return; }
+    const [tStr, p1Str, p2Str, diffStr, estado] = parts;
+    const t = parseFloat(tStr), p1 = parseFloat(p1Str), p2 = parseFloat(p2Str), diff = parseFloat(diffStr);
+    if([t,p1,p2,diff].some(isNaN)){ log(line); return; }
+    log(line, classifyLine(estado));
+    updateUI(t, p1, p2, diff, estado);
+  }
+
+  // ---- Web Serial connection ----
+  async function connect(){
+    try{
+      setConn('connecting');
+      port = await navigator.serial.requestPort();
+      await port.open({ baudRate: 115200 });
+      keepReading = true;
+      els.btnConnect.disabled = true;
+      els.btnDisconnect.disabled = false;
+      setConn('live');
+      readLoop();
+    }catch(err){
+      setConn('err');
+      log('[conexion cancelada o fallida: ' + err.message + ']');
+    }
+  }
+
+  async function readLoop(){
+    const decoder = new TextDecoderStream();
+    const readableClosed = port.readable.pipeTo(decoder.writable);
+    reader = decoder.readable.getReader();
+    try{
+      while(keepReading){
+        const { value, done } = await reader.read();
+        if(done) break;
+        if(value){
+          lineBuffer += value;
+          let idx;
+          while((idx = lineBuffer.indexOf('\n')) >= 0){
+            const line = lineBuffer.slice(0, idx);
+            lineBuffer = lineBuffer.slice(idx+1);
+            handleLine(line);
+          }
+        }
+      }
+    }catch(err){
+      setConn('err');
+      log('[conexion perdida: ' + err.message + ']');
+    }finally{
+      reader.releaseLock();
+      try{ await readableClosed; }catch(e){}
+    }
+  }
+
+  async function disconnect(){
+    keepReading = false;
+    try{ if(reader) await reader.cancel(); }catch(e){}
+    try{ if(port) await port.close(); }catch(e){}
+    els.btnConnect.disabled = false;
+    els.btnDisconnect.disabled = true;
+    setConn('idle');
+  }
+
+  els.btnConnect.addEventListener('click', connect);
+  els.btnDisconnect.addEventListener('click', disconnect);
+  els.btnClearLog.addEventListener('click', () => { els.log.textContent = ''; });
+
+  // ---- Canvas chart ----
+  const ctx = els.chart.getContext('2d');
+  function resizeCanvas(){
+    const rect = els.chart.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    els.chart.width = rect.width * dpr;
+    els.chart.height = 220 * dpr;
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    drawChart();
+  }
+  window.addEventListener('resize', resizeCanvas);
+
+  function drawChart(){
+    const w = els.chart.clientWidth, h = 220;
+    ctx.clearRect(0,0,w,h);
+    // grid
+    ctx.strokeStyle = '#1A1D24';
+    ctx.lineWidth = 1;
+    for(let i=0;i<=4;i++){
+      const y = h - (h-20) * (i/4) - 10;
+      ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(w,y); ctx.stroke();
+    }
+    if(history.length < 2) return;
+    const n = history.length;
+    const xStep = w / (MAX_POINTS - 1);
+    const startX = w - (n-1)*xStep;
+
+    function plot(key, color, lineWidth){
+      ctx.beginPath();
+      ctx.strokeStyle = color;
+      ctx.lineWidth = lineWidth;
+      history.forEach((pt, i) => {
+        const x = startX + i*xStep;
+        const y = h - 10 - (pt[key]/100) * (h-20);
+        if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+      });
+      ctx.stroke();
+    }
+    plot('diff', 'rgba(240,48,76,0.85)', 1.5);
+    plot('p1', '#3FD3E8', 2);
+    plot('p2', '#F2A93B', 2);
+  }
+
+  resizeCanvas();
+  setConn('idle');
+})();
+</script>
+</body>
+</html>
