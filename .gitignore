@@ -1,3 +1,39 @@
+@'
+# --- Arduino IDE / arduino-cli ---
+*.hex
+*.elf
+*.bin
+*.map
+build/
+.pio/
+.pioenvs/
+.piolibdeps/
+*.o
+*.d
+
+# Cache y builds temporales de Arduino IDE 2.x
+.vscode/
+sketch.yaml
+compile_commands.json
+
+# --- Sistema operativo ---
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# --- Editores ---
+.idea/
+*.swp
+*~
+
+# --- Wokwi (si se generan archivos temporales de sesion) ---
+.wokwi/
+
+# --- Archivos de respaldo ---
+*.bak
+*.tmp
+*_old.*
+'@ | Out-File -FilePath .gitignore -Encoding utf8
 ## Core latex/pdflatex auxiliary files:
 *.aux
 *.lof
