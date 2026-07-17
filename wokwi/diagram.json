@@ -1,0 +1,100 @@
+{
+  "version": 1,
+  "author": "Francisco",
+  "editor": "wokwi",
+  "parts": [
+    { "type": "wokwi-esp32-devkit-v1", "id": "esp", "top": 0, "left": -50, "attrs": {} },
+    {
+      "type": "wokwi-potentiometer",
+      "id": "pot1",
+      "top": -164.5,
+      "left": 239.8,
+      "attrs": { "value": "50" }
+    },
+    {
+      "type": "wokwi-potentiometer",
+      "id": "pot2",
+      "top": -140,
+      "left": 450,
+      "attrs": { "value": "50" }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r1",
+      "top": -20,
+      "left": 260,
+      "attrs": { "value": "10000" }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r2",
+      "top": 40,
+      "left": 260,
+      "attrs": { "value": "20000" }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r3",
+      "top": -20,
+      "left": 460,
+      "attrs": { "value": "10000" }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r4",
+      "top": 40,
+      "left": 460,
+      "attrs": { "value": "10000" }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "led_alert",
+      "top": 180,
+      "left": -150,
+      "attrs": { "color": "red" }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r_led1",
+      "top": 180,
+      "left": -220,
+      "attrs": { "value": "220" }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "led_motor",
+      "top": 240,
+      "left": -150,
+      "attrs": { "color": "green" }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r_led2",
+      "top": 240,
+      "left": -220,
+      "attrs": { "value": "220" }
+    },
+    { "type": "wokwi-serial-monitor", "id": "serial", "top": 300, "left": -400, "attrs": {} }
+  ],
+  "connections": [
+    [ "esp:5V", "pot1:VCC", "red", [] ],
+    [ "esp:GND.1", "pot1:GND", "black", [] ],
+    [ "pot1:SIG", "r1:1", "green", [] ],
+    [ "r1:2", "r2:1", "green", [] ],
+    [ "r2:2", "esp:GND.2", "black", [] ],
+    [ "r1:2", "esp:D34", "yellow", [] ],
+    [ "esp:5V", "pot2:VCC", "red", [] ],
+    [ "esp:GND.1", "pot2:GND", "black", [] ],
+    [ "pot2:SIG", "r3:1", "blue", [] ],
+    [ "r3:2", "r4:1", "blue", [] ],
+    [ "r4:2", "esp:GND.2", "black", [] ],
+    [ "r3:2", "esp:D35", "orange", [] ],
+    [ "esp:D25", "r_led1:1", "red", [] ],
+    [ "r_led1:2", "led_alert:A", "red", [] ],
+    [ "led_alert:C", "esp:GND.3", "black", [] ],
+    [ "esp:D26", "r_led2:1", "green", [] ],
+    [ "r_led2:2", "led_motor:A", "green", [] ],
+    [ "led_motor:C", "esp:GND.3", "black", [] ]
+  ],
+  "dependencies": {}
+}
