@@ -1,4 +1,3 @@
-@'
 # Sistema-de-Validacion-de-Plausibilidad-del-APPS-Accelerator-Pedal-Position-Sensor-
 
 Actividad 1 del proceso de reclutamiento de **UNAM Motorsport** (División de Electrónica y Sistemas Embebidos).
@@ -81,4 +80,3 @@ Este proyecto fue mi primera experiencia programando un microcontrolador y traba
 ## Autor
 
 Francisco José Coutiño Morales — Facultad de Ingeniería, UNAM
-'@ | Out-File -FilePath README.md -Encoding utf8
